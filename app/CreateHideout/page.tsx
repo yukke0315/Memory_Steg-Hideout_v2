@@ -37,7 +37,7 @@ export default function CreateHideout() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-zinc-900 text-zinc-100 overflow-hidden pt-2 md:pt-4">
+    <div className="flex flex-col min-h-screen w-full bg-zinc-900 text-zinc-100 pt-2 md:pt-4">
 
       {/* タイトル */}
       <div className="text-center mb-4 md:mb-6">
@@ -50,7 +50,7 @@ export default function CreateHideout() {
       </div>
 
       {/* メイン */}
-      <main className="flex-1 p-6 md:px-10 pb-10 overflow-y-auto">
+      <main className="flex-1 p-6 md:px-10 pb-10">
         <div className="mx-auto flex flex-col lg:flex-row gap-8 max-w-5xl">
           
           {/* 左カラム：画像プレビュー */}
