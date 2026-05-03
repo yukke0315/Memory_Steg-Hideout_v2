@@ -2,10 +2,10 @@ import { UploadCloud, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 mt-10 md:mt-20">
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 mt-2 md:mt-4">
     
       {/* タイトル */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-15">
         <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
           Step Into Hideout
         </h2>
@@ -14,7 +14,7 @@ export default function Home() {
         </p>
       </div>
 
-      {/* メインの入力パネル */}
+      {/* メイン */}
       <div className="w-full max-w-4xl bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 md:p-10 flex flex-col md:flex-row gap-8 md:gap-12 relative overflow-hidden backdrop-blur-sm">
         
         {/* 左側：ZIPアップロード */}
