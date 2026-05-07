@@ -1,8 +1,43 @@
+"use client";
+
+import { useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, FileArchive } from "lucide-react";
+import Link from "next/link";
 
 export default function CreateHideout() {
+  // 画像プレビュー用のState
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 画像部分がクリックされたらinputにもっていく(デフォルトUI隠し)
+  const handleImageClick = () => {
+    console.log("画像エリアがクリックされた！", fileInputRef.current);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    } else {
+      console.log("あれ？fileInputRef.current が空っぽだよ！");
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // プレビュー用URL作っておく
+      const imgUrl = URL.createObjectURL(file);
+      setPreviewUrl(imgUrl);
+    }
+  }
+
+  // 削除ボタン処理
+  const handleRemoveImage = () => {
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // inputの中身も
+    }
+  }
+
   return (
-    <div className="flex flex-col h-screen w-full bg-zinc-900 text-zinc-100 overflow-hidden pt-2 md:pt-4">
+    <div className="flex flex-col min-h-screen w-full bg-zinc-900 text-zinc-100 pt-2 md:pt-4">
 
       {/* タイトル */}
       <div className="text-center mb-4 md:mb-6">
@@ -15,7 +50,7 @@ export default function CreateHideout() {
       </div>
 
       {/* メイン */}
-      <main className="flex-1 p-6 md:px-10 pb-10 overflow-y-auto">
+      <main className="flex-1 p-6 md:px-10 pb-10">
         <div className="mx-auto flex flex-col lg:flex-row gap-8 max-w-5xl">
           
           {/* 左カラム：画像プレビュー */}
@@ -25,13 +60,25 @@ export default function CreateHideout() {
                 <span className="text-sm text-zinc-400">Uploaded photo</span>
               </div>
               
-              {/* ダミー */}
-              <div className="w-full aspect-[4/3] bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700/50 overflow-hidden">
-                <ImageIcon size={48} className="text-zinc-600" />
+              <div onClick={handleImageClick} className="w-full aspect-[4/3] bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700/50 overflow-hidden cursor-pointer hover:bg-zinc-700/50 transition-colors">
+                {/* 画像ナシならダミー */}
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />) : (
+                  <ImageIcon size={48} className="text-zinc-600" />
+                )}
               </div>
 
+              {/* ファイル選択 */}
+              <input 
+                type="file" 
+                accept="image/*" // 画像のみ
+                className="hidden" // 隠す
+                ref={fileInputRef} // refで動かす
+                onChange={handleFileChange} // handleFileChangeを実行
+              />
+
               <div className="flex justify-center gap-6 py-2 border-t border-zinc-800 mt-2">
-                <button className="text-zinc-400 hover:text-red-400 transition-colors">
+                <button onClick={handleRemoveImage} className="text-zinc-400 hover:text-red-400 transition-colors">
                   <Trash2 size={18} />
                 </button>
               </div>
