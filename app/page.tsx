@@ -8,7 +8,7 @@ export default function Home() {
       {/* タイトルとか */}
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-          Memory Steg-Hideout #2
+          Memory <span className="text-zinc-500">Steg-Hideout#2</span>
         </h2>
         <p className="text-zinc-400 tracking-wider">
           秘密の日記を、写真の裏側に。
