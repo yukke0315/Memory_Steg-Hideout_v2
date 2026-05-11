@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useRef } from "react";
 import { ArrowLeft, Lock, Calendar } from "lucide-react";
 import Link from "next/link";
 
@@ -14,6 +15,9 @@ const memories = [
 ];
 
 export default function GalleryPage() {
+  // 選択した写真のIDを管理
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
       
@@ -29,56 +33,68 @@ export default function GalleryPage() {
 
       {/* メインギャラリー */}
       <main className="flex-1 flex flex-col justify-center relative select-none">
-        
+      
+        {/* 背景ぼかし */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-[500px] h-[500px] bg-emerald-900/10 rounded-full blur-[120px]" />
         </div>
 
-        {/* 横スクロール */}
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-12 px-[10vw] md:px-[35vw] pb-20 pt-10 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-          {memories.map((memory) => (
-            <motion.div
-              key={memory.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: memory.id * 0.1 }}
-              className="snap-center shrink-0"
-            >
-              <div className="w-[280px] md:w-[320px] group">
-                {/* カード本体 */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-3 pb-8 shadow-2xl transition-all duration-500 group-hover:border-zinc-600 group-hover:-translate-y-2">
-                  
-                  {/* 写真部分 */}
-                  <div className="aspect-square bg-zinc-800 rounded-sm mb-6 overflow-hidden relative border border-zinc-950">
-                    {/* ここに実際の画像が入る */}
-                    <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 text-zinc-600">
-                      <motion.div
-                        animate={{ opacity: [0.4, 0.7, 0.4] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                      >
-                        <Lock size={32} />
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  {/* カード下部のテキスト */}
-                  <div className="px-1">
-                    <h3 className="text-zinc-300 text-sm font-medium tracking-wide mb-2 group-hover:text-zinc-100 transition-colors">
-                      {memory.title}
-                    </h3>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-zinc-600">
-                        <Calendar size={12} />
-                        <span className="text-[10px] font-mono">{memory.date}</span>
+        {selectedId === null ? (
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-12 px-[10vw] md:px-[35vw] pb-20 pt-10 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+          {/* 普通の状態のgallery */}
+          {/* 横スクロール */}
+            {memories.map((memory) => (
+              <motion.div
+                key={memory.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: memory.id * 0.1 }}
+                className="snap-center shrink-0"
+              >
+                <div className="w-[280px] md:w-[320px] group" onClick={() => setSelectedId(memory.id)}>
+                  {/* カード本体 */}
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-3 pb-8 shadow-2xl transition-all duration-500 group-hover:border-zinc-600 group-hover:-translate-y-2">
+                    
+                    {/* 写真部分 */}
+                    <div className="aspect-square bg-zinc-800 rounded-sm mb-6 overflow-hidden relative border border-zinc-950">
+                      {/* ここに実際の画像が入る */}
+                      <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 text-zinc-600">
+                        <motion.div
+                          animate={{ opacity: [0.4, 0.7, 0.4] }}
+                          transition={{ repeat: Infinity, duration: 2 }}
+                        >
+                          <Lock size={32} />
+                        </motion.div>
                       </div>
-                      <span className="text-[10px] font-mono text-zinc-700">#{memory.id.toString().padStart(3, '0')}</span>
+                    </div>
+
+                    {/* カード下部のテキスト */}
+                    <div className="px-1">
+                      <h3 className="text-zinc-300 text-sm font-medium tracking-wide mb-2 group-hover:text-zinc-100 transition-colors">
+                        {memory.title}
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-zinc-600">
+                          <Calendar size={12} />
+                          <span className="text-[10px] font-mono">{memory.date}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-zinc-700">#{memory.id.toString().padStart(3, '0')}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full h-full text-2xl">
+            {/* 選択した写真の表示 (まだ)*/}
+            <h2>画像: {selectedId}</h2>
+            <button onClick={() => setSelectedId(null)} className="mt-4 text-zinc-500 hover:text-zinc-300 underline">
+              戻る
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );
