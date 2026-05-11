@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Lock, Calendar } from "lucide-react";
 import Link from "next/link";
 
@@ -17,6 +17,37 @@ const memories = [
 export default function GalleryPage() {
   // 選択した写真のIDを管理
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  // アニメーションで表示する途中のテキスト
+  const [displayedText, setDisplayedText] = useState("");
+
+  // ダミーテキスト
+  const dummyText = "2026.05.03\n散歩中に見つけたカフェ。\nコーヒーを飲んだ。\nそこそこの味。";
+
+  // 一文字ずつ表示するアニメーション
+  useEffect(() => {
+    // textを空に
+    if (selectedId == null) {
+      setDisplayedText("");
+      return;
+    }
+
+    let index = 0;
+
+    // 50ms毎
+    const interval = setInterval(() => {
+      // dummytextを一文字ずつ移す
+      setDisplayedText((prev) => prev + dummyText[index]);
+      index++;
+
+      // 最後まで行ったら止める
+      if (index >= dummyText.length - 1) {
+        clearInterval(interval);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [selectedId]);
 
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
@@ -108,8 +139,9 @@ export default function GalleryPage() {
 
             {/* 右側：日記の内容（まだ） */}
               <div className="flex-1 flex flex-col justify-center items-start">
-                <div className="text-emerald-500 font-mono text-lg">
-                  <p>{">"} DECRYPTING...</p>
+                <div className="text-emerald-500 font-mono text-lg whitespace-pre-wrap">
+                  {/* 日記の内容 */}
+                  {displayedText}
                   <p className="animate-pulse">{">"} _</p>
                 </div>
                 
