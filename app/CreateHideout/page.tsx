@@ -4,6 +4,9 @@ import { useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, FileArchive } from "lucide-react";
 import Link from "next/link";
 
+// ステガノ作成用のテキスト->バイナリ変換関数
+import { textToBinary } from "@/utils/steg";
+
 export default function CreateHideout() {
   // 画像プレビュー用のState
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -11,11 +14,11 @@ export default function CreateHideout() {
 
   // 画像部分がクリックされたらinputにもっていく(デフォルトUI隠し)
   const handleImageClick = () => {
-    console.log("画像エリアがクリックされた！", fileInputRef.current);
+    console.log("画像エリアクリック", fileInputRef.current);
     if (fileInputRef.current) {
       fileInputRef.current.click();
     } else {
-      console.log("あれ？fileInputRef.current が空っぽだよ！");
+      console.log("fileInputRef.currentが空");
     }
   }
 
@@ -35,6 +38,17 @@ export default function CreateHideout() {
       fileInputRef.current.value = ""; // inputの中身も
     }
   }
+
+  // ステガノ変換用
+  const handleExport = () => {
+    // テスト用
+    const testText = "ABCあいう123";
+    
+    // バイナリに変換
+    const bits = textToBinary(testText);
+    console.log("changed binary:", bits);
+    console.log(`length:${bits.length}bit`);
+  };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-zinc-900 text-zinc-100 pt-2 md:pt-4">
@@ -113,7 +127,7 @@ export default function CreateHideout() {
             </div>
 
             <div className="flex items-center justify-end mt-auto pt-4">
-              <button className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-emerald-900/20">
+              <button onClick={handleExport} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-emerald-900/20">
                 <FileArchive size={18} /> Export as ZIP
               </button>
             </div>
