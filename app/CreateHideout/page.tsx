@@ -4,9 +4,10 @@ import { useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, FileArchive } from "lucide-react";
 import Link from "next/link";
 
-// ステガノ作成用の関数
+// ステガノ関連の関数
 import { textToBinary } from "@/utils/steg";
 import { embedTextInImage } from "@/utils/steg";
+import { extractTextFromImage } from "@/utils/steg";
 
 export default function CreateHideout() {
   // 画像プレビュー用のState
@@ -65,6 +66,13 @@ export default function CreateHideout() {
     try {
       const embeddedBlob = await embedTextInImage(fileInputRef.current.files[0], memoryText);
       
+      // test
+      console.log("=== テスト ===");
+      const decryptedText = await extractTextFromImage(embeddedBlob);
+      console.log("復元データ:", decryptedText);
+      console.log("元のデータ:", decryptedText === memoryText);
+      console.log("=== 終了 ===");
+
       // ダウンロード
       const downloadUrl = URL.createObjectURL(embeddedBlob);
       const a = document.createElement("a");

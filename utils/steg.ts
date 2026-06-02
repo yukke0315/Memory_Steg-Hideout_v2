@@ -89,3 +89,72 @@ export async function embedTextInImage(file: File, text: string): Promise<Blob> 
         img.src = url;
     });
 }
+
+// 画像からテキストを取り出す
+export async function extractTextFromImage(file: File | Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+
+            if (!ctx) {
+                reject(new Error("Canvas context is not available"));
+                return;
+            }
+
+            ctx.drawImage(img, 0, 0);
+
+            // キャンバスから画像のピクセルデータ取得
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // 先頭32bitから長さを取得
+            let payloadLength = 0;
+            for (let i = 0; i < 32; i++) {
+                // 左にシフトしてLSBを足す
+                payloadLength = (payloadLength << 1) | (data[i] & 1);
+            }
+
+            // 画像サイズ超えならエラー
+            if (payloadLength <= 0 || payloadLength > data.length - 32) {
+                reject(new Error("Invalid payload length"));
+                return;
+            }
+
+            // 長さ分LSBを取り出す
+            const binaryData: number[] = [];
+            for (let i = 32; i < 32 + payloadLength; i++) {
+                binaryData.push(data[i] & 1);
+            }
+
+            // 1byte毎にまとめて数値配列に
+            const bytes: number[] = [];
+            for (let i = 0; i < binaryData.length; i += 8) {
+                let byte = 0;
+                for (let j = 0; j < 8; j++) {
+                    byte = (byte << 1) | binaryData[i + j];
+                }
+                bytes.push(byte);
+            }
+
+            // UTF-8に戻す
+            const decoder = new TextDecoder();
+            const decodedText = decoder.decode(new Uint8Array(bytes));
+
+            resolve(decodedText);
+            URL.revokeObjectURL(url);
+        };
+
+        img.onerror = () => {
+            reject(new Error("Failed to load image"));
+            URL.revokeObjectURL(url);
+        };
+
+        img.src = url;
+    });
+}
