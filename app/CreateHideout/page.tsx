@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, FileArchive } from "lucide-react";
 import Link from "next/link";
+import JSZip from "jszip";
 
 // ステガノ関連の関数
 import { textToBinary } from "@/utils/steg";
@@ -66,18 +67,27 @@ export default function CreateHideout() {
     try {
       const embeddedBlob = await embedTextInImage(fileInputRef.current.files[0], memoryText);
       
+      const zip = new JSZip();
+
+      // 作成した画像を追加
+      // *後でforで回して複数に
+      zip.file("memory-001.png", embeddedBlob);
+
+      // ZIPファイルを生成
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+
       // test
-      console.log("=== テスト ===");
-      const decryptedText = await extractTextFromImage(embeddedBlob);
-      console.log("復元データ:", decryptedText);
-      console.log("元のデータ:", decryptedText === memoryText);
-      console.log("=== 終了 ===");
+      // console.log("=== テスト ===");
+      // const decryptedText = await extractTextFromImage(embeddedBlob);
+      // console.log("復元データ:", decryptedText);
+      // console.log("元のデータ:", decryptedText === memoryText);
+      // console.log("=== 終了 ===");
 
       // ダウンロード
-      const downloadUrl = URL.createObjectURL(embeddedBlob);
+      const downloadUrl = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = "hideout.png";
+      a.download = "hideout.zip";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
