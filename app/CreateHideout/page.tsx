@@ -3,19 +3,29 @@
 import { useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, FileArchive } from "lucide-react";
 import Link from "next/link";
+import JSZip from "jszip";
+
+// ステガノ関連の関数
+import { textToBinary } from "@/utils/steg";
+import { embedTextInImage } from "@/utils/steg";
+import { extractTextFromImage } from "@/utils/steg";
 
 export default function CreateHideout() {
   // 画像プレビュー用のState
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // 中身のState
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [diary, setDiary] = useState("");
 
   // 画像部分がクリックされたらinputにもっていく(デフォルトUI隠し)
   const handleImageClick = () => {
-    console.log("画像エリアがクリックされた！", fileInputRef.current);
+    console.log("画像エリアクリック", fileInputRef.current);
     if (fileInputRef.current) {
       fileInputRef.current.click();
     } else {
-      console.log("あれ？fileInputRef.current が空っぽだよ！");
+      console.log("fileInputRef.currentが空");
     }
   }
 
@@ -35,6 +45,58 @@ export default function CreateHideout() {
       fileInputRef.current.value = ""; // inputの中身も
     }
   }
+
+  // ステガノ変換用
+  const handleExport = async () => {
+    if (!fileInputRef.current || !fileInputRef.current.files || fileInputRef.current.files.length === 0) {
+      alert("画像をアップロードしてください");
+      return;
+    }
+
+    // 入力データを1つのJSONに
+    const memoryData = {
+      title: title,
+      date: date,
+      diary: diary
+    };
+
+    // JSON->text変換
+    const memoryText = JSON.stringify(memoryData);
+    console.log("memoryText:", memoryText);
+
+    try {
+      const embeddedBlob = await embedTextInImage(fileInputRef.current.files[0], memoryText);
+      
+      const zip = new JSZip();
+
+      // 作成した画像を追加
+      // *後でforで回して複数に
+      zip.file("memory-001.png", embeddedBlob);
+
+      // ZIPファイルを生成
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+
+      // test
+      // console.log("=== テスト ===");
+      // const decryptedText = await extractTextFromImage(embeddedBlob);
+      // console.log("復元データ:", decryptedText);
+      // console.log("元のデータ:", decryptedText === memoryText);
+      // console.log("=== 終了 ===");
+
+      // ダウンロード
+      const downloadUrl = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = "hideout.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("埋め込みに失敗しました");
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-zinc-900 text-zinc-100 pt-2 md:pt-4">
@@ -95,25 +157,42 @@ export default function CreateHideout() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-zinc-400 mb-2">Title</label>
-                <input type="text" placeholder="カフェに行った" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" />
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="カフェに行った"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all"
+                />
               </div>
 
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm text-zinc-400 mb-2">Date</label>
                   {/* デフォルトで値入れないとダサい */}
-                  <input type="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all [color-scheme:dark]" />
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all [color-scheme:dark]"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm text-zinc-400 mb-2">Diary</label>
-                <textarea rows={6} placeholder="散歩中に見つけたカフェに..." className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all resize-none"></textarea>
+                <textarea
+                  rows={6}
+                  value={diary}
+                  onChange={(e) => setDiary(e.target.value)}
+                  placeholder="散歩中に見つけたカフェに..."
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all resize-none"
+                />
               </div>
             </div>
 
             <div className="flex items-center justify-end mt-auto pt-4">
-              <button className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-emerald-900/20">
+              <button onClick={handleExport} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-emerald-900/20">
                 <FileArchive size={18} /> Export as ZIP
               </button>
             </div>
