@@ -57,14 +57,25 @@ export async function embedTextInImage(file: File, text: string): Promise<Blob> 
             const data = imageData.data;
 
             // 画像が小さすぎて入りきらない場合はエラー
-            if (payload.length > data.length) {
+            // Aを除いた数を使う（RGBAのうちR,G,Bのみ）
+            const usableChannels = Math.floor(data.length * 3 / 4);
+            if (payload.length > usableChannels) {
                 reject(new Error("Payload is too large to embed in the image"));
                 return;
             }
-            // LSBにテキストのバイナリを埋め込む（stegano）
-            for (let i = 0; i < payload.length; i++) {
+
+            // LSBにテキストのバイナリを埋め込む（Aは変更しない）
+            let dataIndex = 0;
+            for (let i = 0; i < payload.length; ) {
+                // Aは毎4バイト目なのでスキップ
+                if ((dataIndex + 1) % 4 === 0) {
+                    dataIndex++;
+                    continue;
+                }
                 // LSBを0にしてから、埋め込む
-                data[i] = (data[i] & 254) | payload[i];
+                data[dataIndex] = (data[dataIndex] & 254) | payload[i];
+                dataIndex++;
+                i++;
             }
 
             // 変更したピクセルデータをキャンバスに戻す
@@ -113,23 +124,38 @@ export async function extractTextFromImage(file: File | Blob): Promise<string> {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
 
-            // 先頭32bitから長さを取得
+            // 先頭32bitから長さを取得（Aは無視してR,G,Bのみから読む）
             let payloadLength = 0;
-            for (let i = 0; i < 32; i++) {
-                // 左にシフトしてLSBを足す
-                payloadLength = (payloadLength << 1) | (data[i] & 1);
+            let dataIndex = 0;
+            for (let i = 0; i < 32; ) {
+                if ((dataIndex + 1) % 4 === 0) {
+                    dataIndex++;
+                    continue;
+                }
+                payloadLength = (payloadLength << 1) | (data[dataIndex] & 1);
+                dataIndex++;
+                i++;
             }
 
             // 画像サイズ超えならエラー
-            if (payloadLength <= 0 || payloadLength > data.length - 32) {
+            // Aを除いた数でチェック
+            const usableChannels = Math.floor(data.length * 3 / 4);
+            if (payloadLength <= 0 || payloadLength > usableChannels - 32) {
                 reject(new Error("Invalid payload length"));
                 return;
             }
 
             // 長さ分LSBを取り出す
             const binaryData: number[] = [];
-            for (let i = 32; i < 32 + payloadLength; i++) {
-                binaryData.push(data[i] & 1);
+            let extracted = 0;
+            while (extracted < payloadLength && dataIndex < data.length) {
+                if ((dataIndex + 1) % 4 === 0) {
+                    dataIndex++;
+                    continue;
+                }
+                binaryData.push(data[dataIndex] & 1);
+                dataIndex++;
+                extracted++;
             }
 
             // 1byte毎にまとめて数値配列に
