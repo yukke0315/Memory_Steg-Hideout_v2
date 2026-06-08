@@ -92,15 +92,12 @@ export default function GalleryPage({ memories, onExit }: { memories: memoryData
                       
                       {/* 写真部分 */}
                       <div className="aspect-square bg-zinc-800 rounded-sm mb-6 overflow-hidden relative border border-zinc-950">
-                        {/* ここに実際の画像が入る */}
-                        <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 text-zinc-600">
-                          <motion.div
-                            animate={{ opacity: [0.4, 0.7, 0.4] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                          >
-                            <Lock size={32} />
-                          </motion.div>
-                        </div>
+                        {/* 実際の画像 */}
+                        <img 
+                          src={memory.imageUrl} 
+                          alt={memory.title} 
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" 
+                        />
                       </div>
 
                       {/* カード下部のテキスト */}
@@ -132,19 +129,33 @@ export default function GalleryPage({ memories, onExit }: { memories: memoryData
                 layoutId={`memory-${selectedId}`}
                 className="w-[300px] md:w-[400px] aspect-square bg-zinc-800 rounded-lg overflow-hidden shadow-2xl"
               >
-                {/* 選択した写真の表示 (まだ)*/}
+                {/* 選択した写真の表示 */}
+                {selectedMemory && (
+                  <img 
+                    src={selectedMemory.imageUrl} 
+                    alt={selectedMemory.title} 
+                    className="w-full h-full object-cover" 
+                  />
+                )}
               </motion.div>
             </div>
 
-            {/* 右側：日記の内容（まだ） */}
+            {/* 右側：日記の内容 */}
               <div className="flex-1 flex flex-col justify-center items-start">
-                <div className="text-emerald-500 font-mono text-lg whitespace-pre-wrap">
-                  {/* 日記の内容 */}
+                {/* タイトルと日付 */}
+                {selectedMemory && (
+                  <div className="mb-6 font-mono">
+                    <h2 className="text-2xl font-bold text-zinc-100">{selectedMemory.title}</h2>
+                    <span className="text-sm text-zinc-500">{selectedMemory.date}</span>
+                  </div>
+                )}
+
+                <div className="text-emerald-500 font-mono text-lg leading-relaxed whitespace-pre-wrap">
                   {displayedText}
-                  <p className="animate-pulse">{">"} _</p>
+                  <span className="animate-pulse ml-1">_</span>
                 </div>
                 
-                <button onClick={() => { setSelectedId(null); onExit(); }} className="mt-8 text-zinc-500 hover:text-zinc-300 text-sm underline">
+                <button onClick={() => setSelectedId(null)} className="mt-8 text-zinc-500 hover:text-zinc-300 text-sm underline font-mono">
                   [ Back ]
                 </button>
               </div>
