@@ -5,43 +5,42 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Lock, Calendar } from "lucide-react";
 import Link from "next/link";
 
-// ダミーデータ
-const memories = [
-  { id: 1, title: "hello", date: "2026.03.01" },
-  { id: 2, title: "hello2", date: "2026.04.01" },
-  { id: 3, title: "hello3", date: "2026.05.01" },
-  { id: 4, title: "hello4", date: "2026.06.01" },
-  { id: 5, title: "hello5", date: "2026.07.01" },
-];
+// データ型
+export type memoryData = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  date: string;
+  diary: string;
+};
 
-export default function GalleryPage() {
+export default function GalleryPage({ memories, onExit }: { memories: memoryData[]; onExit: () => void }) {
   // 選択した写真のIDを管理
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // アニメーションで表示する途中のテキスト
   const [displayedText, setDisplayedText] = useState("");
 
-  // ダミーテキスト
-  const dummyText = "2026.05.03\n散歩中に見つけたカフェ。\nコーヒーを飲んだ。\nそこそこの味。";
+  // 選択したものの中身を取得
+  const selectedMemory = memories.find(m => m.id === selectedId);
 
   // 一文字ずつ表示するアニメーション
   useEffect(() => {
-    // textを空に
-    if (selectedId == null) {
+    if (!selectedMemory) {
       setDisplayedText("");
       return;
     }
 
     let index = 0;
+    const diaryText = selectedMemory.diary;
 
     // 50ms毎
     const interval = setInterval(() => {
-      // dummytextを一文字ずつ移す
-      setDisplayedText((prev) => prev + dummyText[index]);
-      index++;
-
-      // 最後まで行ったら止める
-      if (index >= dummyText.length - 1) {
+      if (index < diaryText.length) {
+        const nextChar = diaryText[index];
+        setDisplayedText(prev => prev + nextChar);
+        index++;
+      }else {
         clearInterval(interval);
       }
     }, 50);
@@ -84,7 +83,7 @@ export default function GalleryPage() {
                   layoutId={`memory-${memory.id}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: memory.id * 0.1 }}
+                  transition={{ delay: Number(memory.id) * 0.1 }}
                   className="snap-center shrink-0"
                 >
                   <div className="w-[280px] md:w-[320px] group" onClick={() => setSelectedId(memory.id)}>
@@ -93,15 +92,12 @@ export default function GalleryPage() {
                       
                       {/* 写真部分 */}
                       <div className="aspect-square bg-zinc-800 rounded-sm mb-6 overflow-hidden relative border border-zinc-950">
-                        {/* ここに実際の画像が入る */}
-                        <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 text-zinc-600">
-                          <motion.div
-                            animate={{ opacity: [0.4, 0.7, 0.4] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                          >
-                            <Lock size={32} />
-                          </motion.div>
-                        </div>
+                        {/* 実際の画像 */}
+                        <img 
+                          src={memory.imageUrl} 
+                          alt={memory.title} 
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" 
+                        />
                       </div>
 
                       {/* カード下部のテキスト */}
@@ -133,19 +129,33 @@ export default function GalleryPage() {
                 layoutId={`memory-${selectedId}`}
                 className="w-[300px] md:w-[400px] aspect-square bg-zinc-800 rounded-lg overflow-hidden shadow-2xl"
               >
-                {/* 選択した写真の表示 (まだ)*/}
+                {/* 選択した写真の表示 */}
+                {selectedMemory && (
+                  <img 
+                    src={selectedMemory.imageUrl} 
+                    alt={selectedMemory.title} 
+                    className="w-full h-full object-cover" 
+                  />
+                )}
               </motion.div>
             </div>
 
-            {/* 右側：日記の内容（まだ） */}
+            {/* 右側：日記の内容 */}
               <div className="flex-1 flex flex-col justify-center items-start">
-                <div className="text-emerald-500 font-mono text-lg whitespace-pre-wrap">
-                  {/* 日記の内容 */}
+                {/* タイトルと日付 */}
+                {selectedMemory && (
+                  <div className="mb-6 font-mono">
+                    <h2 className="text-2xl font-bold text-zinc-100">{selectedMemory.title}</h2>
+                    <span className="text-sm text-zinc-500">{selectedMemory.date}</span>
+                  </div>
+                )}
+
+                <div className="text-emerald-500 font-mono text-lg leading-relaxed whitespace-pre-wrap">
                   {displayedText}
-                  <p className="animate-pulse">{">"} _</p>
+                  <span className="animate-pulse ml-1">_</span>
                 </div>
                 
-                <button onClick={() => setSelectedId(null)} className="mt-8 text-zinc-500 hover:text-zinc-300 text-sm underline">
+                <button onClick={() => setSelectedId(null)} className="mt-8 text-zinc-500 hover:text-zinc-300 text-sm underline font-mono">
                   [ Back ]
                 </button>
               </div>
