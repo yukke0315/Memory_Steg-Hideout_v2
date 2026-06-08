@@ -1,6 +1,5 @@
 "use client";
 
-
 import { UploadCloud, ArrowRight } from "lucide-react";
 import { useState, useRef, type ChangeEvent } from "react";
 import JSZip from "jszip";
@@ -8,10 +7,14 @@ import JSZip from "jszip";
 // ステガノ関連の関数
 import { extractTextFromImage } from "@/utils/steg";
 
+// gallery
+import GalleryPage from "../gallery/page";
+
 // ZIP解読用関数
 const handleZipUpload = async (
   e: ChangeEvent<HTMLInputElement>,
-  setExtractedData: (data: any[]) => void
+  setExtractedData: (data: any[]) => void,
+  setShowGallery: (show: boolean) => void
 ) => {
   const file = e.target.files?.[0];
   
@@ -48,6 +51,7 @@ const handleZipUpload = async (
     }
 
     setExtractedData(extractedData);
+    setShowGallery(true);
   } catch (error) {
     console.error("ZIP解読エラー:", error);
     alert("ZIPファイルの読み込み/解読に失敗");
@@ -57,12 +61,26 @@ const handleZipUpload = async (
 export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [extractedData, setExtractedData] = useState<any[]>([]);
+  const [showGallery, setShowGallery] = useState(false);
 
   const handleBoxClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
+
+  // gallery表示
+  if (showGallery && extractedData.length > 0) {
+    return (
+      <GalleryPage 
+        memories={extractedData} 
+        onExit={() => {
+          setShowGallery(false);
+          setExtractedData([]);
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-6 mt-2 md:mt-4">
@@ -104,7 +122,7 @@ export default function Home() {
               accept=".zip" 
               className="hidden" 
               ref={fileInputRef} 
-              onChange={(e) => handleZipUpload(e, setExtractedData)} 
+              onChange={(e) => handleZipUpload(e, setExtractedData, setShowGallery)} 
             />
           </button>
 

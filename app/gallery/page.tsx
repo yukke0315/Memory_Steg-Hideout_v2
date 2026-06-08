@@ -5,43 +5,42 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Lock, Calendar } from "lucide-react";
 import Link from "next/link";
 
-// ダミーデータ
-const memories = [
-  { id: 1, title: "hello", date: "2026.03.01" },
-  { id: 2, title: "hello2", date: "2026.04.01" },
-  { id: 3, title: "hello3", date: "2026.05.01" },
-  { id: 4, title: "hello4", date: "2026.06.01" },
-  { id: 5, title: "hello5", date: "2026.07.01" },
-];
+// データ型
+export type memoryData = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  date: string;
+  diary: string;
+};
 
-export default function GalleryPage() {
+export default function GalleryPage({ memories, onExit }: { memories: memoryData[]; onExit: () => void }) {
   // 選択した写真のIDを管理
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // アニメーションで表示する途中のテキスト
   const [displayedText, setDisplayedText] = useState("");
 
-  // ダミーテキスト
-  const dummyText = "2026.05.03\n散歩中に見つけたカフェ。\nコーヒーを飲んだ。\nそこそこの味。";
+  // 選択したものの中身を取得
+  const selectedMemory = memories.find(m => m.id === selectedId);
 
   // 一文字ずつ表示するアニメーション
   useEffect(() => {
-    // textを空に
-    if (selectedId == null) {
+    if (!selectedMemory) {
       setDisplayedText("");
       return;
     }
 
     let index = 0;
+    const diaryText = selectedMemory.diary;
 
     // 50ms毎
     const interval = setInterval(() => {
-      // dummytextを一文字ずつ移す
-      setDisplayedText((prev) => prev + dummyText[index]);
-      index++;
-
-      // 最後まで行ったら止める
-      if (index >= dummyText.length - 1) {
+      if (index < diaryText.length) {
+        const nextChar = diaryText[index];
+        setDisplayedText(prev => prev + nextChar);
+        index++;
+      }else {
         clearInterval(interval);
       }
     }, 50);
@@ -84,7 +83,7 @@ export default function GalleryPage() {
                   layoutId={`memory-${memory.id}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: memory.id * 0.1 }}
+                  transition={{ delay: Number(memory.id) * 0.1 }}
                   className="snap-center shrink-0"
                 >
                   <div className="w-[280px] md:w-[320px] group" onClick={() => setSelectedId(memory.id)}>
@@ -145,7 +144,7 @@ export default function GalleryPage() {
                   <p className="animate-pulse">{">"} _</p>
                 </div>
                 
-                <button onClick={() => setSelectedId(null)} className="mt-8 text-zinc-500 hover:text-zinc-300 text-sm underline">
+                <button onClick={() => { setSelectedId(null); onExit(); }} className="mt-8 text-zinc-500 hover:text-zinc-300 text-sm underline">
                   [ Back ]
                 </button>
               </div>
