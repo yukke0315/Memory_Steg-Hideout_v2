@@ -36,6 +36,16 @@ const handleZipUpload = async (
         console.log(`画像ファイル: ${fileName}`);
         const blob = await zipEntry.async("blob");
         const imageUrl = URL.createObjectURL(blob);
+
+        // 画像の縦横比を取得
+        const orientation = await new Promise<"landscape" | "portrait">((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            // 横幅が縦幅以上なら横長(landscape)、それ以外は縦長(portrait)
+            resolve(img.width >= img.height ? "landscape" : "portrait");
+          };
+          img.src = imageUrl;
+        });
         
         // ステガノ取り出す
         const secretText = await extractTextFromImage(blob);
@@ -46,6 +56,7 @@ const handleZipUpload = async (
           title: memoryData.title,
           date: memoryData.date,
           diary: memoryData.diary,
+          orientation: orientation,
         });
       }
     }

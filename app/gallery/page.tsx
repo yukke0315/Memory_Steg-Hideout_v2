@@ -12,6 +12,7 @@ export type memoryData = {
   title: string;
   date: string;
   diary: string;
+  orientation?: "landscape" | "portrait";
 };
 
 export default function GalleryPage({ memories, onExit }: { memories: memoryData[]; onExit: () => void }) {
@@ -127,14 +128,20 @@ export default function GalleryPage({ memories, onExit }: { memories: memoryData
             <div className="flex-1 flex justify-end">
               <motion.div
                 layoutId={`memory-${selectedId}`}
-                className="w-[300px] md:w-[400px] aspect-square bg-zinc-800 rounded-lg overflow-hidden shadow-2xl"
+                className={`
+                  ${selectedMemory?.orientation === "portrait" 
+                    ? "w-[280px] md:w-[360px] aspect-[3/4]" // 縦長の場合
+                    : "w-[360px] md:w-[480px] aspect-[4/3]" // 横長の場合
+                  } 
+                  bg-zinc-800 rounded-lg overflow-hidden shadow-2xl
+                `}
               >
                 {/* 選択した写真の表示 */}
                 {selectedMemory && (
                   <img 
                     src={selectedMemory.imageUrl} 
                     alt={selectedMemory.title} 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover object-contain" 
                   />
                 )}
               </motion.div>
